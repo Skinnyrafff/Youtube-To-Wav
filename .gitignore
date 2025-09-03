@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Directorio de salida de audio
+wav_output/
+
+# Archivos de empaquetado de PyInstaller (por si se usa en el futuro)
+build/
+dist/
+*.spec
