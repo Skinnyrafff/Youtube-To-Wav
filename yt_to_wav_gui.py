@@ -7,27 +7,9 @@ from yt_dlp.utils import DownloadError
 
 # --- Lógica de descarga (adaptada para la GUI) ---
 
-def on_progress_gui(d, status_var, progress_bar):
-    """Actualiza una variable de Tkinter y una barra de progreso con el progreso de la descarga."""
-    if d.get('status') == 'downloading':
-        percent_str = d.get('_percent_str', '0.0%').strip().replace('%', '')
-        try:
-            percent = float(percent_str)
-            progress_bar['value'] = percent
-        except ValueError:
-            pass  # Ignorar si el valor no es un número
-
-        p = d.get('_percent_str', '').strip()
-        spd = d.get('_speed_str', '').strip()
-        eta = d.get('_eta_str', '').strip()
-        status_var.set(f"Descargando: {p} | Velocidad: {spd} | ETA: {eta}")
-    elif d.get('status') == 'finished':
-        status_var.set("Descarga completa, convirtiendo a WAV...")
-        progress_bar['value'] = 100
-
-def download_to_wav_gui(url: str, status_var: tk.StringVar, progress_hook_callback):
+def download_to_wav_gui(url: str, status_var: tk.StringVar):
     """
-    Descarga el audio de una URL y lo convierte a WAV, actualizando la GUI.
+    Descarga el audio de una URL y lo convierte a WAV.
     """
     try:
         out_dir = "wav_output"
@@ -38,9 +20,8 @@ def download_to_wav_gui(url: str, status_var: tk.StringVar, progress_hook_callba
 
         ydl_opts = {
             "format": "bestaudio/best",
-            "outtmpl": str(Path(out_dir) / "% (title)s.%(ext)s"),
+            "outtmpl": str(Path(out_dir) / "%(title)s.%(ext)s"),
             "noplaylist": True,
-            "progress_hooks": [progress_hook_callback],
             "postprocessors": [{
                 "key": "FFmpegExtractAudio",
                 "preferredcodec": "wav",
@@ -52,24 +33,20 @@ def download_to_wav_gui(url: str, status_var: tk.StringVar, progress_hook_callba
         if ffmpeg_dir.exists():
             ydl_opts["ffmpeg_location"] = str(ffmpeg_dir)
 
+        status_var.set("Descargando y convirtiendo...")
         with YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(url, download=True)
-            base_filename = ydl.prepare_filename(info_dict).rsplit('.', 1)[0]
-            output_filename = f"{base_filename}.wav"
-            status_var.set(f"¡Éxito! Guardado en: {output_filename}")
-            messagebox.showinfo("Éxito", f"Audio guardado en:\n{output_filename}")
+            ydl.extract_info(url, download=True)
+            status_var.set(f"¡Éxito! Conversión a WAV finalizada.")
 
     except DownloadError as e:
         error_message = f"Error: No se pudo procesar la URL."
         if "is not a valid URL" in str(e):
             error_message = f"Error: La URL no parece ser válida."
         elif "ffmpeg not found" in str(e):
-            error_message = "Error: FFmpeg no encontrado. Asegúrate de que esté en la carpeta correcta."
+            error_message = "Error: FFmpeg no encontrado."
         status_var.set(error_message)
-        messagebox.showerror("Error de Descarga", error_message)
     except Exception as e:
         status_var.set(f"Error inesperado: {e}")
-        messagebox.showerror("Error Inesperado", f"Ocurrió un error:\n{e}")
 
 # --- Aplicación GUI ---
 
@@ -80,11 +57,9 @@ class App(tk.Tk):
         self.geometry("550x200")
         self.resizable(False, False)
 
-        # Estilo
         style = ttk.Style(self)
         style.theme_use('clam')
 
-        # Widgets
         self.url_label = ttk.Label(self, text="URL de YouTube:")
         self.url_label.pack(pady=(10, 0))
 
@@ -101,6 +76,15 @@ class App(tk.Tk):
         self.status_var.set("Listo para descargar.")
         self.status_label = ttk.Label(self, textvariable=self.status_var, wraplength=500)
         self.status_label.pack(pady=(5, 10), padx=10)
+        
+        self.animation_job = None
+
+    def animate_progress(self, step=0):
+        if step <= 100:
+            self.progress_bar['value'] = step
+            self.animation_job = self.after(15, lambda: self.animate_progress(step + 1))
+        else:
+            self.progress_bar['value'] = 100
 
     def start_download_thread(self):
         url = self.url_entry.get()
@@ -109,27 +93,39 @@ class App(tk.Tk):
             return
 
         self.download_button.config(state=tk.DISABLED)
-        self.status_var.set("Iniciando descarga...")
+        self.status_var.set("Iniciando...")
         self.progress_bar['value'] = 0
-
-        progress_hook = lambda d: on_progress_gui(d, self.status_var, self.progress_bar)
+        if self.animation_job:
+            self.after_cancel(self.animation_job)
+        self.animate_progress()
 
         thread = threading.Thread(
             target=self.run_download,
-            args=(url, self.status_var, progress_hook),
+            args=(url, self.status_var),
             daemon=True
         )
         thread.start()
         self.check_thread(thread)
 
-    def run_download(self, url, status_var, progress_hook):
-        download_to_wav_gui(url, status_var, progress_hook)
+    def run_download(self, url, status_var):
+        download_to_wav_gui(url, status_var)
 
     def check_thread(self, thread):
         if thread.is_alive():
             self.after(100, lambda: self.check_thread(thread))
         else:
+            if self.animation_job:
+                self.after_cancel(self.animation_job)
+            self.progress_bar['value'] = 100
             self.download_button.config(state=tk.NORMAL)
+            final_status = self.status_var.get()
+            if final_status.startswith("¡Éxito!"):
+                messagebox.showinfo("Éxito", final_status)
+            elif final_status.startswith("Error:"):
+                messagebox.showerror("Error", final_status)
+            
+            self.status_var.set("Listo para descargar.")
+            self.after(500, lambda: self.progress_bar.config(value=0))
 
 if __name__ == "__main__":
     app = App()
