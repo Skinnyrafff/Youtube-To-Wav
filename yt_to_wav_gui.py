@@ -7,15 +7,23 @@ from yt_dlp.utils import DownloadError
 
 # --- Lógica de descarga (adaptada para la GUI) ---
 
-def on_progress_gui(d, status_var):
-    """Actualiza una variable de Tkinter con el progreso de la descarga."""
+def on_progress_gui(d, status_var, progress_bar):
+    """Actualiza una variable de Tkinter y una barra de progreso con el progreso de la descarga."""
     if d.get('status') == 'downloading':
+        percent_str = d.get('_percent_str', '0.0%').strip().replace('%', '')
+        try:
+            percent = float(percent_str)
+            progress_bar['value'] = percent
+        except ValueError:
+            pass  # Ignorar si el valor no es un número
+
         p = d.get('_percent_str', '').strip()
         spd = d.get('_speed_str', '').strip()
         eta = d.get('_eta_str', '').strip()
         status_var.set(f"Descargando: {p} | Velocidad: {spd} | ETA: {eta}")
     elif d.get('status') == 'finished':
         status_var.set("Descarga completa, convirtiendo a WAV...")
+        progress_bar['value'] = 100
 
 def download_to_wav_gui(url: str, status_var: tk.StringVar, progress_hook_callback):
     """
@@ -69,7 +77,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("YouTube to WAV Downloader")
-        self.geometry("550x170")
+        self.geometry("550x200")
         self.resizable(False, False)
 
         # Estilo
@@ -86,6 +94,9 @@ class App(tk.Tk):
         self.download_button = ttk.Button(self, text="Descargar y Convertir a WAV", command=self.start_download_thread)
         self.download_button.pack(pady=10)
 
+        self.progress_bar = ttk.Progressbar(self, orient='horizontal', length=400, mode='determinate')
+        self.progress_bar.pack(pady=5)
+
         self.status_var = tk.StringVar()
         self.status_var.set("Listo para descargar.")
         self.status_label = ttk.Label(self, textvariable=self.status_var, wraplength=500)
@@ -99,13 +110,14 @@ class App(tk.Tk):
 
         self.download_button.config(state=tk.DISABLED)
         self.status_var.set("Iniciando descarga...")
+        self.progress_bar['value'] = 0
 
-        progress_hook = lambda d: on_progress_gui(d, self.status_var)
+        progress_hook = lambda d: on_progress_gui(d, self.status_var, self.progress_bar)
 
         thread = threading.Thread(
             target=self.run_download,
             args=(url, self.status_var, progress_hook),
-            daemon=True # El hilo se cerrará si la ventana principal se cierra
+            daemon=True
         )
         thread.start()
         self.check_thread(thread)
