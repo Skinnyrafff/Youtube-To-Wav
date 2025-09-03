@@ -1,42 +1,35 @@
-# YouTube to WAV Downloader
+# YouTube a WAV
 
-A simple tool to download audio from YouTube videos and save it in WAV format. The project includes both a command-line interface (CLI) and a graphical user interface (GUI).
+¡Una herramienta súper sencilla para bajar el audio de videos de YouTube y guardarlo como WAV!
 
-## Features
+## ¿Qué necesitas?
 
-- **GUI Application:** A user-friendly window to paste a URL and download.
-- **Command-Line Script:** For terminal-based usage.
-- **Portable:** Includes `ffmpeg` and a launcher script (`.bat`) for easy execution on Windows without needing to modify system PATH variables.
+*   **Python 3:** Si no lo tienes, ¡a instalarlo!
+*   **yt-dlp:** Un programita que hace la magia de bajar el audio. Lo instalas con este comando en tu terminal:
+    ```
+    pip install yt-dlp
+    ```
+*   **FFmpeg:** Esta es clave para convertir el audio.
+    1.  Descárgalo desde [la página oficial de FFmpeg](https://ffmpeg.org/download.html).
+    2.  Descomprímelo donde quieras.
+    3.  **¡Importante!** Añade la carpeta `bin` de FFmpeg al PATH de tu sistema para que la terminal lo encuentre.
 
-## Requirements
+## ¿Cómo se usa?
 
-- Python 3.x
-- The `yt-dlp` library. Install it via pip:
-  ```
-  pip install yt-dlp
-  ```
+### Con la interfaz gráfica (¡la forma fácil!)
 
-## How to Use
+1.  Ve a la carpeta del proyecto.
+2.  Dale doble clic al archivo `start_gui.bat`.
+3.  Se abrirá una ventana. Pega el link de YouTube, dale a "Descargar" y ¡listo!
 
-### Graphical Interface (Recommended)
+### Desde la terminal (para los más pros)
 
-1.  Go to the project directory.
-2.  Double-click the `start_gui.bat` file.
-3.  A window will open. Paste the YouTube URL into the text box and click the "Descargar" button.
-
-Alternatively, you can run the GUI script from your terminal:
-```
-python yt_to_wav_gui.py
-```
-
-### Command-Line
-
-Open a terminal in the project directory and use the following command, replacing `"URL_HERE"` with your YouTube video URL:
+Abre una terminal en la carpeta del proyecto y escribe esto (cambia "URL_AQUI" por el link del video):
 
 ```
-python yt_to_wav.py "URL_HERE"
+python yt_to_wav.py "URL_AQUI"
 ```
 
-## Output Files
+## ¿Y los audios?
 
-The downloaded and converted `.wav` files will be saved in the `wav_output` directory.
+Todos los archivos `.wav` que bajes se guardarán en la carpeta `wav_output`.

@@ -11,3 +11,6 @@ wav_output/
 build/
 dist/
 *.spec
+
+# FFmpeg
+ffmpeg-8.0-essentials_build/
