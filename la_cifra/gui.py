@@ -69,7 +69,7 @@ def style_window(window):
 class LogWindow(ctk.CTkToplevel):
     def __init__(self, master, lines: list[str]):
         super().__init__(master)
-        self.title(f"{APP_NAME} · Logs")
+        self.title(f"{APP_NAME} {__version__} · Logs")
         self.geometry("720x420")
         style_window(self)
 
