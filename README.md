@@ -1,35 +1,81 @@
-# YouTube a WAV
+<p align="center"><img src="assets/icon.png" width="96" alt="LA CIFRA"></p>
 
-¡Una herramienta súper sencilla para bajar el audio de videos de YouTube y guardarlo como WAV!
+# LA CIFRA DOWNLOADER
 
-## ¿Qué necesitas?
+Descarga el audio de videos de YouTube en **WAV** (16, 24 o 32 bits) o **MP3** (128 a 320 kbps).
 
-*   **Python 3:** Si no lo tienes, ¡a instalarlo!
-*   **yt-dlp:** Un programita que hace la magia de bajar el audio. Lo instalas con este comando en tu terminal:
-    ```
-    pip install yt-dlp
-    ```
-*   **FFmpeg:** Esta es clave para convertir el audio.
-    1.  Descárgalo desde [la página oficial de FFmpeg](https://ffmpeg.org/download.html).
-    2.  Descomprímelo donde quieras.
-    3.  **¡Importante!** Añade la carpeta `bin` de FFmpeg al PATH de tu sistema para que la terminal lo encuentre.
+## Instalar
 
-## ¿Cómo se usa?
+1. Ve a [**Releases**](https://github.com/Skinnyrafff/Youtube-To-Wav/releases/latest) y descarga `LaCifraDownloader-Setup-X.Y.Z.exe`.
+2. Ábrelo y sigue los pasos. No necesita permisos de administrador ni instalar nada más.
+3. Si Windows muestra "Windows protegió su PC", haz clic en **Más información → Ejecutar de todas formas**. Aparece porque el instalador no está firmado digitalmente.
 
-### Con la interfaz gráfica (¡la forma fácil!)
+Para actualizar, usa el botón **Buscar actualización** al pie de la app: descarga la versión nueva, la instala y vuelve a abrirse sola.
 
-1.  Ve a la carpeta del proyecto.
-2.  Dale doble clic al archivo `start_gui.bat`.
-3.  Se abrirá una ventana. Pega el link de YouTube, dale a "Descargar" y ¡listo!
+## Cómo se usa
 
-### Desde la terminal (para los más pros)
+1. Pega el enlace del video (aparece la portada y el título).
+2. Elige el formato y la calidad.
+3. Elige la carpeta de destino.
+4. Presiona **Descargar**. Al terminar, se abre la carpeta con el archivo seleccionado.
 
-Abre una terminal en la carpeta del proyecto y escribe esto (cambia "URL_AQUI" por el link del video):
+Si algo falla, **Ver logs** muestra el detalle; el botón **Copiar** sirve para compartirlo.
+
+---
+
+## Para desarrolladores
+
+### Ejecutar desde el código
+
+Requiere Python 3.11+ y FFmpeg (en el `PATH` o en `vendor/bin`).
 
 ```
-python yt_to_wav.py "URL_AQUI"
+pip install -r requirements.txt
+python la_cifra_downloader.pyw
 ```
 
-## ¿Y los audios?
+En Windows también puedes abrir `abrir.bat` (sin consola).
 
-Todos los archivos `.wav` que bajes se guardarán en la carpeta `wav_output`.
+Versión de terminal:
+
+```
+python yt_to_wav.py "URL" -f mp3 -q "320 kbps" -o "C:\carpeta"
+```
+
+### Estructura
+
+```
+la_cifra/
+  core.py       descarga (yt-dlp) y conversión (FFmpeg) con progreso
+  gui.py        interfaz (CustomTkinter)
+  updater.py    actualizaciones desde GitHub Releases
+  paths.py      rutas, FFmpeg/Deno incluidos, carpetas del usuario, configuración
+  winutil.py    integración con Windows (Explorador, barra de título)
+assets/         ícono y logo (generados desde assets/svg con tools/generar_assets.py)
+installer/      script de Inno Setup
+tools/build.ps1 compila la app y el instalador
+la_cifra_downloader.pyw   punto de entrada de la app
+yt_to_wav.py              versión de terminal
+```
+
+### Compilar el instalador
+
+Requiere [Inno Setup 6](https://jrsoftware.org/isdl.php).
+
+```
+pip install -r requirements-build.txt
+powershell -ExecutionPolicy Bypass -File tools\build.ps1
+```
+
+El script descarga FFmpeg y Deno a `vendor/bin` la primera vez. El resultado queda en `dist\installer\`.
+
+### Publicar una versión
+
+```
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+GitHub Actions (`.github/workflows/release.yml`) compila el instalador y lo publica como Release. Las apps instaladas lo detectan al abrirse.
+
+Cuando YouTube cambia algo y las descargas dejan de funcionar, normalmente basta con publicar una versión nueva: el workflow instala la última versión de yt-dlp.

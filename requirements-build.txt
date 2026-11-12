@@ -1,0 +1,3 @@
+# Para compilar el instalador (además de requirements.txt)
+-r requirements.txt
+pyinstaller>=6.10

@@ -1,19 +1,15 @@
-# Python cache
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+.venv/
+venv/
 
-# Directorio de salida de audio
-wav_output/
-
-# Archivos de empaquetado de PyInstaller (por si se usa en el futuro)
+# Compilación
 build/
 dist/
 *.spec
+vendor/
 
-# FFmpeg
-ffmpeg-8.0-essentials_build/
-
-# Logs
-debug.log
+# Salida de pruebas
+wav_output/
+*.log

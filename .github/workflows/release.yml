@@ -1,0 +1,57 @@
+# Compila el instalador y lo publica como Release.
+#
+# Para publicar una versión nueva:
+#   git tag v1.1.0
+#   git push origin v1.1.0
+# En unos minutos aparece en la pestaña "Releases" con LaCifraDownloader-Setup-1.1.0.exe,
+# y las apps instaladas lo ofrecen en "Buscar actualización".
+#
+# También se puede correr a mano (Actions > Publicar versión > Run workflow): en ese caso
+# solo compila y deja el instalador como artefacto descargable, sin publicar un Release.
+
+name: Publicar versión
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements-build.txt
+
+      - name: Instalar Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Compilar app e instalador
+        shell: pwsh
+        run: ./tools/build.ps1 -Version "${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}"
+
+      - name: Publicar Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: LA CIFRA DOWNLOADER ${{ github.ref_name }}
+          files: dist/installer/*.exe
+          generate_release_notes: true
+
+      - name: Guardar instalador (ejecución manual)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: instalador
+          path: dist/installer/*.exe
